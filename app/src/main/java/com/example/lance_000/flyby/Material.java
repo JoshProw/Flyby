@@ -10,7 +10,7 @@ public class Material {
     Float[] specularCol;
     Float[] ambientCol;
 
-    float specularWeight;
+    Float specularWeight;
 
     /**Material
      * Initializer for the Material object
@@ -21,6 +21,6 @@ public class Material {
         Float[] specularCol = {0f,0f,0f,0f};
         Float[] ambientCol = {0f,0f,0f,0f};
 
-        float specularWeight = 100;
+        specularWeight = 100f;
     }
 }

@@ -12,7 +12,7 @@ public class GLActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mainSurface = new GLSurfaceView(this);
-        mainSurface.setRenderer(new GLGameRenderer());
+        mainSurface.setRenderer(new GLGameRenderer(this.getApplicationContext()));
         setContentView(mainSurface);
     }
 

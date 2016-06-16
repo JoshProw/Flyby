@@ -2,6 +2,7 @@ package com.example.lance_000.flyby;
 
 import android.graphics.PointF;
 import android.opengl.Matrix;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -25,9 +26,9 @@ public class GLGameObject {
     float posYSpeed;
     float posZSpeed;
 
-    float posX = 0.f;
-    float posY = 0.f;
-    float posZ = 0.f;
+    float posX;
+    float posY;
+    float posZ;
 
     // Vertices to make a triangle
     private float vertices[];
@@ -43,12 +44,44 @@ public class GLGameObject {
     private ShortBuffer pointBuffer;
     private FloatBuffer colourBuffer;
 
-    public GLGameObject(float aposXSpeed, float aposYSpeed, float aposZSpeed) {
+    public GLGameObject(float intialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
 
         // Set velocity
+        posX = intialX;
+        posY = initialY;
+        posZ = initialZ;
+
         posXSpeed = aposXSpeed;
         posYSpeed = aposYSpeed;
         posZSpeed = aposZSpeed;
+    }
+
+    public void generateColours(float r,float g, float b, float a)
+    {
+        verticesColours = new float[(vertices.length/3)*4];
+        for(int i = 0;i<verticesColours.length;i+=4)
+        {
+            int j = i;
+            verticesColours[j] = r;
+            j++;
+            verticesColours[j] = g;
+            j++;
+            verticesColours[j] = b;
+            j++;
+            verticesColours[j] = a;
+        }
+
+        for(int i = 0;i<verticesColours.length;i++)
+        {
+            Log.d("COLOURS",""+verticesColours[i]);
+        }
+        Log.d("VERTICES COUNT",""+vertices.length);
+        Log.d("COLOUR COUNT",""+verticesColours.length);
+    }
+
+    public void setColours(float[] colours)
+    {
+        verticesColours = colours;
     }
 
     public void loadBuffers()
@@ -69,14 +102,16 @@ public class GLGameObject {
         pointBuffer.put(pointIndex);
         pointBuffer.position(0);
 
-        /*
-        // Store points (2 bytes per short)
-        ByteBuffer colBuff = ByteBuffer.allocateDirect(verticesColours.length*4);
-        colBuff.order(ByteOrder.nativeOrder());
 
-        colourBuffer = colBuff.asFloatBuffer();
-        colourBuffer.put(verticesColours);
-        colourBuffer.position(0);*/
+        if(verticesColours != null) {
+            // Store points (2 bytes per short)
+            ByteBuffer colBuff = ByteBuffer.allocateDirect(verticesColours.length * 4);
+            colBuff.order(ByteOrder.nativeOrder());
+
+            colourBuffer = colBuff.asFloatBuffer();
+            colourBuffer.put(verticesColours);
+            colourBuffer.position(0);
+        }
     }
 
     public void setVertices(Vector<Float> newVectices)
@@ -88,6 +123,7 @@ public class GLGameObject {
         for(int i = 0; i<newVectices.size();i++)
         {
             vertices[i] = newVectices.elementAt(i);
+            //Log.d("VERT INDEX: "+i,""+vertices[i]);
         }
     }
 
@@ -98,6 +134,7 @@ public class GLGameObject {
         for(int i = 0; i<newPoints.size();i++)
         {
             pointIndex[i] = newPoints.elementAt(i).shortValue();
+            //Log.d("POINT INDEX: "+i,""+pointIndex[i]);
         }
     }
 
@@ -134,7 +171,7 @@ public class GLGameObject {
         //Matrix.translateM(vertices,0,posX,posY,0);
         Matrix.scaleM(vertices, 0, 0.25f, 0.25f, 0.25f); // apply scale
 
-        gl.glFrontFace(GL10.GL_CW); // connect points in clockwise order
+        gl.glFrontFace(GL10.GL_CCW); // connect points in clockwise order
 
         // remove faces not seen by camera
         gl.glEnable(GL10.GL_CULL_FACE);
@@ -143,14 +180,17 @@ public class GLGameObject {
         // enable state to read from vertex array
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 
-        //gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+        if(verticesColours!=null)
+            gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+
         // first: number of points (2 for 2d)
         // second: type of values in vertex array
         // third: if wanting to skip over values each step
         // fourth: buffer to get values from
         gl.glVertexPointer(3,GL10.GL_FLOAT,0,vertBuffer);
 
-        //gl.glColorPointer(4,GL10.GL_FLOAT,0,colourBuffer);
+        if(verticesColours!=null)
+            gl.glColorPointer(4,GL10.GL_FLOAT,0,colourBuffer);
         // first: way to connect points
         // second: how many points do we have?
         // third: type of values we're working with
@@ -159,7 +199,10 @@ public class GLGameObject {
         gl.glDrawElements(GL10.GL_TRIANGLES,pointIndex.length,GL10.GL_UNSIGNED_SHORT,pointBuffer);
 
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
-        //gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+
+        if(verticesColours!=null)
+            gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+
         gl.glDisable(GL10.GL_CULL_FACE);
 
         gl.glPopMatrix();
