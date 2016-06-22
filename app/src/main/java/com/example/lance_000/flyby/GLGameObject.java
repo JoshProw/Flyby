@@ -1,16 +1,14 @@
 package com.example.lance_000.flyby;
 
-import android.graphics.PointF;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.Vector;
-
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Created by lance_000 on 9/06/2016.
@@ -44,7 +42,13 @@ public class GLGameObject {
     private ShortBuffer pointBuffer;
     private FloatBuffer colourBuffer;
 
-    public GLGameObject(float intialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
+    private int mtlID;
+    private int resourceID;
+
+    public GLGameObject(int resID, int mtlID, float intialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
+
+        this.mtlID = mtlID;
+        this.resourceID = resID;
 
         // Set velocity
         posX = intialX;
@@ -114,19 +118,6 @@ public class GLGameObject {
         }
     }
 
-    public void setVertices(Vector<Float> newVectices)
-    {
-        vertices=new float[newVectices.size()];
-
-        //newVectices.toArray(vertices);
-
-        for(int i = 0; i<newVectices.size();i++)
-        {
-            vertices[i] = newVectices.elementAt(i);
-            //Log.d("VERT INDEX: "+i,""+vertices[i]);
-        }
-    }
-
     public void setPoints(Vector<Integer> newPoints)
     {
         pointIndex=new short[newPoints.size()];
@@ -141,6 +132,17 @@ public class GLGameObject {
     public float[] getVertices()
     {
         return vertices;
+    }
+
+    public void setVertices(Vector<Float> newVectices) {
+        vertices = new float[newVectices.size()];
+
+        //newVectices.toArray(vertices);
+
+        for (int i = 0; i < newVectices.size(); i++) {
+            vertices[i] = newVectices.elementAt(i);
+            //Log.d("VERT INDEX: "+i,""+vertices[i]);
+        }
     }
 
     private void setXspeed(float x)
@@ -206,5 +208,85 @@ public class GLGameObject {
         gl.glDisable(GL10.GL_CULL_FACE);
 
         gl.glPopMatrix();
+    }
+
+    public float getAlpha() {
+        return alpha;
+    }
+
+    public void setAlpha(float alpha) {
+        this.alpha = alpha;
+    }
+
+    public float getSize() {
+        return size;
+    }
+
+    public void setSize(float size) {
+        this.size = size;
+    }
+
+    public float getPosXSpeed() {
+        return posXSpeed;
+    }
+
+    public void setPosXSpeed(float posXSpeed) {
+        this.posXSpeed = posXSpeed;
+    }
+
+    public float getPosYSpeed() {
+        return posYSpeed;
+    }
+
+    public void setPosYSpeed(float posYSpeed) {
+        this.posYSpeed = posYSpeed;
+    }
+
+    public float getPosZSpeed() {
+        return posZSpeed;
+    }
+
+    public void setPosZSpeed(float posZSpeed) {
+        this.posZSpeed = posZSpeed;
+    }
+
+    public float getPosX() {
+        return posX;
+    }
+
+    public void setPosX(float posX) {
+        this.posX = posX;
+    }
+
+    public float getPosY() {
+        return posY;
+    }
+
+    public void setPosY(float posY) {
+        this.posY = posY;
+    }
+
+    public float getPosZ() {
+        return posZ;
+    }
+
+    public void setPosZ(float posZ) {
+        this.posZ = posZ;
+    }
+
+    public int getMtlResourceID() {
+        return mtlID;
+    }
+
+    public void setMtlResourceID(int mtlID) {
+        this.mtlID = mtlID;
+    }
+
+    public int getResourceID() {
+        return resourceID;
+    }
+
+    public void setResourceID(int resourceID) {
+        this.resourceID = resourceID;
     }
 }
