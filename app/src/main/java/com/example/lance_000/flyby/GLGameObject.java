@@ -4,6 +4,7 @@ import android.opengl.Matrix;
 import android.util.Log;
 
 import javax.microedition.khronos.opengles.GL10;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -15,7 +16,7 @@ import java.util.Vector;
  *
  * Class for storing all the methods and properties of game 3d objects
  */
-public class GLGameObject {
+public class GLGameObject implements Serializable {
 
     float alpha = 1;
     float size = 2;
@@ -38,9 +39,9 @@ public class GLGameObject {
     private short[] pointIndex;
 
 
-    private FloatBuffer vertBuffer;
-    private ShortBuffer pointBuffer;
-    private FloatBuffer colourBuffer;
+    private transient FloatBuffer vertBuffer;
+    private transient ShortBuffer pointBuffer;
+    private transient FloatBuffer colourBuffer;
 
     private int mtlID;
     private int resourceID;
@@ -105,7 +106,6 @@ public class GLGameObject {
         pointBuffer = pointBuff.asShortBuffer();
         pointBuffer.put(pointIndex);
         pointBuffer.position(0);
-
 
         if(verticesColours != null) {
             // Store points (2 bytes per short)

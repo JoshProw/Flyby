@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:context="com.example.lance_000.flyby.GlActivity">
+
+
+    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent">
+
+        <Button
+                android:text="Left"
+                android:onClick="leftDown"
+                android:id="@+id/btnLeft"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:layout_alignParentLeft="true"
+        />
+
+        <Button
+                android:text="Right"
+                android:id="@+id/btnRight"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:layout_alignParentRight="true"
+        />
+
+        <com.example.lance_000.flyby.FlybyGlSurfaceView
+                android:id="@+id/glSurfaceView"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.23" android:layout_alignParentStart="true">
+        </com.example.lance_000.flyby.FlybyGlSurfaceView>
+    </RelativeLayout>
+
+</android.support.design.widget.CoordinatorLayout>
