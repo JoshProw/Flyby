@@ -30,18 +30,12 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
     // Objects used to load .OBJ mesh file
     private Mesh meshLoader;
     //NOTE: bottom left corner of render window is 0,0
-
-    // Objects to render
-    private GLGameObject ship;
+    
     private GLGameObject obstacle;
     private GLGameObject tunnel;
 
     private ArrayList<GLGameObject> glGameObjects = new ArrayList() {
         {
-            ship = new GLGameObject(
-                    R.raw.flybyship,
-                    R.raw.flybyshipm,
-                    0f, -3, 0f, 0f, 0.0f, 0.0f);
             obstacle = new GLGameObject(
                     R.raw.obstacle,
                     R.raw.obstaclem,
@@ -53,7 +47,6 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
                     0f, 0f, 0f, 0f, 0.f, 0f);
             add(tunnel);
             add(obstacle);
-            add(ship);
         }
     };
 
