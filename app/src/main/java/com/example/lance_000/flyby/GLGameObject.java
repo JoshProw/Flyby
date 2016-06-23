@@ -44,14 +44,14 @@ public class GLGameObject implements Serializable {
     private transient FloatBuffer mColourBuffer;
     private int mtlID;
     private int resourceID;
-    public GLGameObject(int resID, int mtlID, float intialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
+    public GLGameObject(int resID, int mtlID, float initialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
         //Mtl resource id
         this.mtlID = mtlID;
         //Resource id
         this.resourceID = resID;
 
         // Set velocity
-        posX = intialX;
+        posX = initialX;
         posY = initialY;
         posZ = initialZ;
 
