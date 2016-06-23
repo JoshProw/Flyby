@@ -6,7 +6,11 @@ import android.view.View;
 
 import javax.microedition.khronos.opengles.GL10;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Created by Dale on 22/06/16.
+ */
 
 /**
  * Created by Dale on 22/06/16.
@@ -22,7 +26,7 @@ public class GLPlayer extends GLGameObject implements View.OnTouchListener,Seria
 
     private Context context;
 
-    private HashMap<Integer,Boolean> keyMap = new HashMap<>(4);
+    private ConcurrentHashMap<Integer, Boolean> keyMap = new ConcurrentHashMap<>(4);
 
 
     public GLPlayer(Context context, int resID, int mtlID, float intialX, float initialY,

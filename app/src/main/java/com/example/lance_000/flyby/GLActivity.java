@@ -13,28 +13,28 @@ public class GLActivity extends AppCompatActivity {
 
     View[] views;
     private GLSurfaceView _glSurface;
-    private GlIOHandler glIOHandler;
+    private GlOHandler glIOHandler;
     private GLGameRenderer renderer;
     private GLPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_gl);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        setContentView(R.layout.activity_gl);
+
         views = new View[]{
                 findViewById(R.id.btnLeft),
                 findViewById(R.id.btnRight)
         };
 
         //Create the game object loader
-        glIOHandler = new GlIOHandler(this.getApplicationContext());
+        glIOHandler = new GlOHandler(this.getApplicationContext());
 
         try {
             //Load the player game object
@@ -46,7 +46,6 @@ public class GLActivity extends AppCompatActivity {
         for (View v : views) {
             v.setOnTouchListener(player);
         }
-
 
         //Obtain the gl surface view
         _glSurface = (GLSurfaceView) findViewById(R.id.glSurfaceView);

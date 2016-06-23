@@ -7,55 +7,71 @@ import android.opengl.GLU;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * Created by lance_000 on 9/06/2016.
  * <p>
  * Main renderer that handles all the game rendering
+ * <p>
+ * Dale: Edited constructor + objects now take mtlResourceID+resourceID
  */
 public class GLGameRenderer implements GLSurfaceView.Renderer {
 
     // Constants for mesh file names
     final static String SHIPMESH = "";
     final static String OBSTACLEMESH01 = "";
+    private static final float OBSTACLE_INITAL_DEPTH = 70f;
+    private static final float OBSTACLE_RESET_DEPTH = -10f;
     // Speed of world moving towards camera
     private static float ENVRIOZSPEED = 0.015f;
+    final Context context;
     float angle = 10;
     // Objects used to load .OBJ mesh file
     private Mesh meshLoader;
     //NOTE: bottom left corner of render window is 0,0
+
     // Objects to render
     private GLGameObject ship;
     private GLGameObject obstacle;
     private GLGameObject tunnel;
-    //The game objects
-    private GLGameObject[] glGameObjects = {
+
+    private ArrayList<GLGameObject> glGameObjects = new ArrayList() {
+        {
             ship = new GLGameObject(
                     R.raw.flybyship,
                     R.raw.flybyshipm,
-                    0f, -3f, 0f, 0f, 0.f, 0.0f),
-
+                    0f, -3, 0f, 0f, 0.0f, 0.0f);
             obstacle = new GLGameObject(
                     R.raw.obstacle,
                     R.raw.obstaclem,
-                    0f, 0f, 70f, 0f, 0.f, -0.088f),
+                    0f, 0f, 70f, 0f, 0.f, -0.088f);
 
             tunnel = new GLGameObject(
                     R.raw.tunnel,
                     R.raw.tunnelm,
-                    0f, 0f, 0f, 0f, 0.f, 0f)
+                    0f, 0f, 0f, 0f, 0.f, 0f);
+            add(tunnel);
+            add(obstacle);
+            add(ship);
+        }
     };
 
 
+
     public GLGameRenderer(Context activity) {
+        this.context = activity;
+    }
+
+    public void init() {
         for (GLGameObject object : glGameObjects) {
-            loadMeshFromResources(activity, object, object.getResourceID(), object.getMtlResourceID());
+            loadMeshFromResources(object, object.getResourceID(), object.getMtlResourceID());
         }
         tunnel.generateColours(0.2f, 0.2f, 0.2f, 1);
         tunnel.loadBuffers();
     }
 
-    public void loadMeshFromResources(Context context, GLGameObject gameObject, int resourceID, int mtlID) {
+    public void loadMeshFromResources(GLGameObject gameObject, int resourceID, int mtlID) {
 
         meshLoader = new Mesh();
 
@@ -79,6 +95,24 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
         gameObject.setPoints(meshLoader.getPoints());
         gameObject.generateColours(1, 0, 0, 1);
         gameObject.loadBuffers();
+    }
+
+    public void loadTextureFromResources() {
+
+    }
+
+    /*
+        Removed a game object from the rendering pipeline
+     */
+    public void removeGameObject(GLGameObject object) {
+        glGameObjects.remove(object);
+    }
+
+    /*
+        Adds a game object to the rendering pipeline
+     */
+    public void addGameObject(GLGameObject object) {
+        glGameObjects.add(object);
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -111,18 +145,26 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
 
         //gl.glScalef(0.2f,0.2f,0.2f);
 
+
+        for (GLGameObject object : glGameObjects) {
+            object.draw(gl);
+        }
+
         // draw ship object
-        tunnel.draw(gl);
-        obstacle.draw(gl);
+        ///tunnel.draw(gl);
+        //obstacle.draw(gl);
 
         //gl.glRotatef(angle,1,0,1);
-        ship.draw(gl);
+        //ship.draw(gl);
 
         //angle+=1;
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
+
+        if (height == 0) height = 1;
+
         // setup camera
         gl.glViewport(0, 0, width, height);
         float ratio = (float) width / height;

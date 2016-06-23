@@ -121,11 +121,11 @@ public class GLGameObject implements Serializable {
     public void setPoints(Vector<Integer> newPoints)
     {
         pointIndex=new short[newPoints.size()];
+        //newPoints.toArray(new Short[]{}); <--should work without loop
 
         for(int i = 0; i<newPoints.size();i++)
         {
             pointIndex[i] = newPoints.elementAt(i).shortValue();
-            //Log.d("POINT INDEX: "+i,""+pointIndex[i]);
         }
     }
 
