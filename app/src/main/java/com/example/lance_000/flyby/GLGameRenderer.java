@@ -17,54 +17,64 @@ import java.util.ArrayList;
  * Dale: Edited constructor + objects now take mtlResourceID+resourceID
  */
 public class GLGameRenderer implements GLSurfaceView.Renderer {
-
     // Constants for mesh file names
-    final static String SHIPMESH = "";
-    final static String OBSTACLEMESH01 = "";
-    private static final float OBSTACLE_INITAL_DEPTH = 70f;
-    private static final float OBSTACLE_RESET_DEPTH = -10f;
+    final static String mShipMesh = "";
+    final static String mObstactMesh01 = "";
+
     // Speed of world moving towards camera
-    private static float ENVRIOZSPEED = 0.015f;
-    final Context context;
-    float angle = 10;
+    private static final float mEnvironSpeed = 0.015f;
+    //The current context
+    final Context mContext;
+    //True if a collision has been detected during rendering
+    boolean mCollisionDetected = false;
+    //The number of obstacles to render
+    private int mNumObstacles;
     // Objects used to load .OBJ mesh file
     private Mesh meshLoader;
-    //NOTE: bottom left corner of render window is 0,0
-    
-    private GLGameObject obstacle;
-    private GLGameObject tunnel;
-
-    private ArrayList<GLGameObject> glGameObjects = new ArrayList() {
-        {
-            obstacle = new GLGameObject(
-                    R.raw.obstacle,
-                    R.raw.obstaclem,
-                    0f, 0f, 70f, 0f, 0.f, -0.088f);
-
-            tunnel = new GLGameObject(
-                    R.raw.tunnel,
-                    R.raw.tunnelm,
-                    0f, 0f, 0f, 0f, 0.f, 0f);
-            add(tunnel);
-            add(obstacle);
-        }
-    };
+    private GLGameObject mTunnel;
+    private GLPlayer mShip;
+    //The game objects.
+    private ArrayList<GLGameObject> mGLGameObjects;
 
 
+    public GLGameRenderer(GLPlayer ship, Context activity) {
+        this.mShip = ship;
+        this.mContext = activity;
+        this.mNumObstacles = 4;
+    }
 
-    public GLGameRenderer(Context activity) {
-        this.context = activity;
+    public static float getEnvironSpeed() {
+        return mEnvironSpeed;
     }
 
     public void init() {
-        for (GLGameObject object : glGameObjects) {
-            loadMeshFromResources(object, object.getResourceID(), object.getMtlResourceID());
+        mGLGameObjects = new ArrayList() {
+            {
+                for (int i = 0; i < mNumObstacles; i++) {
+                    GLGameObject obstacle = new GLGameObject(
+                            R.raw.obstacle,
+                            R.raw.obstaclem,
+                            0f, 0f, 70f, 0f, 0.f, -0.088f);
+                    obstacle.setObstacleLocation();
+                    add(obstacle);
+                }
+            }
+        };
+
+        mTunnel = new GLGameObject(R.raw.tunnel, R.raw.tunnelm, 0f, 0f, 0f, 0f, 0.f, 0f);
+
+        loadMeshFromResources(mTunnel);
+        loadMeshFromResources(mShip);
+
+        for (GLGameObject object : mGLGameObjects) {
+            loadMeshFromResources(object);
         }
-        tunnel.generateColours(0.2f, 0.2f, 0.2f, 1);
-        tunnel.loadBuffers();
+
+        mTunnel.generateColours(0.2f, 0.2f, 0.2f, 1);
+        mTunnel.loadBuffers();
     }
 
-    public void loadMeshFromResources(GLGameObject gameObject, int resourceID, int mtlID) {
+    public void loadMeshFromResources(final GLGameObject gameObject) {
 
         meshLoader = new Mesh();
 
@@ -72,10 +82,10 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
         InputStream inputStream;
         InputStream inputStreamMtl;
         try {
-            inputStream = context.getResources().openRawResource(resourceID);
-            inputStreamMtl = context.getResources().openRawResource(mtlID);
+            inputStream = mContext.getResources().openRawResource(gameObject.getResourceID());
+            inputStreamMtl = mContext.getResources().openRawResource(gameObject.getMtlResourceID());
 
-            meshLoader.load(inputStream, context, inputStreamMtl);
+            meshLoader.load(inputStream, mContext, inputStreamMtl);
 
             inputStream.close();
             inputStreamMtl.close();
@@ -90,25 +100,21 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
         gameObject.loadBuffers();
     }
 
-    public void loadTextureFromResources() {
-
-    }
-
     /*
         Removed a game object from the rendering pipeline
      */
     public void removeGameObject(GLGameObject object) {
-        glGameObjects.remove(object);
+        mGLGameObjects.remove(object);
     }
 
     /*
         Adds a game object to the rendering pipeline
      */
     public void addGameObject(GLGameObject object) {
-        glGameObjects.add(object);
+        mGLGameObjects.add(object);
     }
 
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
         // two lines boost performance at cost of quality
         gl.glDisable(GL10.GL_DITHER);
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
@@ -120,7 +126,7 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
 
     // main rendering loop
     @Override
-    public void onDrawFrame(GL10 gl) {
+    public void onDrawFrame(final GL10 gl) {
 
         gl.glFogf(GL10.GL_FOG_MODE, GL10.GL_LINEAR);
         gl.glFogf(GL10.GL_FOG_START, 1f);
@@ -136,36 +142,73 @@ public class GLGameRenderer implements GLSurfaceView.Renderer {
         // What camera is looking at
         GLU.gluLookAt(gl, 0, 0, -5, 0, 0, 0, 0, 2.f, 0);
 
-        //gl.glScalef(0.2f,0.2f,0.2f);
+        mTunnel.draw(gl);
 
-
-        for (GLGameObject object : glGameObjects) {
+        for (GLGameObject object : mGLGameObjects) {
+            if (mShip.checkCollision(object)) {
+                mCollisionDetected = true;
+            }
             object.draw(gl);
+            object.loopZ();
         }
 
-        // draw ship object
-        ///tunnel.draw(gl);
-        //obstacle.draw(gl);
+        if (!mCollisionDetected)
+            mShip.draw(gl);
 
-        //gl.glRotatef(angle,1,0,1);
-        //ship.draw(gl);
-
-        //angle+=1;
+        mCollisionDetected = false;
     }
 
     @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-
+    public void onSurfaceChanged(final GL10 gl, final int width, int height) {
+        //Avoid divide by 0
         if (height == 0) height = 1;
 
         // setup camera
         gl.glViewport(0, 0, width, height);
+
         float ratio = (float) width / height;
+
         gl.glMatrixMode(GL10.GL_PROJECTION);
+
         gl.glLoadIdentity();
+
         // camera frustum
         gl.glFrustumf(-ratio, ratio, -1, 1.f, 1, 2500);
     }
 
+    public int getNumObstacles() {
+        return mNumObstacles;
+    }
 
+    public void setNumObstacles(int mNumObstacles) {
+        this.mNumObstacles = mNumObstacles;
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public Mesh getMeshLoader() {
+        return meshLoader;
+    }
+
+    public void setMeshLoader(Mesh meshLoader) {
+        this.meshLoader = meshLoader;
+    }
+
+    public GLGameObject getTunnel() {
+        return mTunnel;
+    }
+
+    public void setTunnel(GLGameObject mTunnel) {
+        this.mTunnel = mTunnel;
+    }
+
+    public GLPlayer getShip() {
+        return mShip;
+    }
+
+    public void setShip(GLPlayer mShip) {
+        this.mShip = mShip;
+    }
 }
