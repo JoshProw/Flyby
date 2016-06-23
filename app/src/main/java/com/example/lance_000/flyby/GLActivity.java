@@ -1,5 +1,7 @@
 package com.example.lance_000.flyby;
 
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -8,74 +10,126 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import java.io.IOException;
+import java.util.HashMap;
 
+/**
+ * The type Gl activity.
+ */
 public class GLActivity extends AppCompatActivity {
-
-    View[] views;
-    private GLSurfaceView _glSurface;
-    private GlOHandler glIOHandler;
-    private GLGameRenderer renderer;
-    private GLPlayer player;
+    private GLSurfaceView mGlSurface;
+    private GLGameRenderer mRenderer;
+    private GLPlayer mPlayer;
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private boolean mUseAccelerometer = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        //Initial window settings.
+        setWindowFlags();
 
-
+        //Set the content view
         setContentView(R.layout.activity_gl);
 
-        views = new View[]{
-                findViewById(R.id.btnLeft),
-                findViewById(R.id.btnRight)
-        };
+        //Loads the mPlayer.
+        loadPlayerContext();
 
-        //Create the game object loader
-        glIOHandler = new GlOHandler(this.getApplicationContext());
+        //Determines input method (buttons/sensor)
+        initInputMethod();
 
-        try {
-            //Load the player game object
-            player = (GLPlayer) glIOHandler.load(getString(R.string.gl_player_save_file));
-        } catch (IOException | ClassNotFoundException e) {
-            player = new GLPlayer(this.getApplicationContext(), R.raw.flybyship, R.raw.flybyshipm, 0f, -3, 0f, 0f, 0.0f, 0.0f);
-        }
+        //Start the gl surface view
+        bootstrapGlSurfaceView();
+    }
 
-        for (View v : views) {
-            v.setOnTouchListener(player);
-        }
-
+    /**
+     * Creates the gl surface view and sets the mRenderer implementation.
+     */
+    public void bootstrapGlSurfaceView() {
         //Obtain the gl surface view
-        _glSurface = (GLSurfaceView) findViewById(R.id.glSurfaceView);
+        mGlSurface = (GLSurfaceView) findViewById(R.id.glSurfaceView);
 
-        //Create the renderer
-        renderer = new GLGameRenderer(this.getApplicationContext());
+        //set the gl surface mRenderer
+        mGlSurface.setRenderer(createRenderer());
+    }
 
-        //Add player to rendering pipeline
-        renderer.addGameObject(player);
+    /**
+     * Loads the mPlayer mContext from internal app storage.
+     */
+    public void loadPlayerContext() {
+        try {
+            //Load the mPlayer game object
+            mPlayer = (GLPlayer) GLIOHandler.load(getApplicationContext(), getString(R.string.gl_player_save_file));
+            mPlayer.setContext(getApplicationContext());
+            mPlayer.setKeyMap(new HashMap<Integer, Boolean>());
+        } catch (IOException | ClassNotFoundException e) {
+            mPlayer = new GLPlayer(this.getApplicationContext(), R.raw.flybyship, R.raw.flybyshipm, 0f, -3, 0f, 0f, 0.0f, 0.0f);
+        }
+    }
 
-        //inititalize the renderer
-        renderer.init();
+    /**
+     * Requests no window title and sets the window to be hardware accelerated.
+     */
+    public void setWindowFlags() {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+    }
 
-        //set the gl surface renderer
-        _glSurface.setRenderer(renderer);
+    /**
+     * Determines the input method (sensors/buttons)
+     */
+    public void initInputMethod() {
+        //The game buttons
+        View[] views = new View[]{findViewById(R.id.btnLeft), findViewById(R.id.btnRight)};
+
+        //Set up mAccelerometer
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        //We have access to an mAccelerometer
+        if (mUseAccelerometer && (mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)) != null) {
+            //Register sensor listener
+            mSensorManager.registerListener(mPlayer, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+            //remove the buttons from the view
+            for (View v : views) {
+                v.setVisibility(View.INVISIBLE);
+            }
+        } else {
+            //Since we have no mAccelerometer or its disabled, show buttons instead
+            for (View v : views) {
+                v.setOnTouchListener(mPlayer);
+            }
+        }
+    }
+
+    /**
+     * Creates and initializes the game mRenderer.
+     *
+     * @return a new GLGameRender object.
+     */
+    public GLGameRenderer createRenderer() {
+        //Create the mRenderer
+        mRenderer = new GLGameRenderer(mPlayer, this.getApplicationContext());
+
+        //inititalize the mRenderer
+        mRenderer.init();
+
+        return mRenderer;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        _glSurface.onPause();
+        mGlSurface.onPause();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (player != null) {
+        if (mPlayer != null) {
             try {
-                glIOHandler.serialize(
-                        getString(R.string.gl_player_save_file), player);
+                GLIOHandler.serialize(getApplicationContext(),
+                        getString(R.string.gl_player_save_file), mPlayer);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -85,6 +139,10 @@ public class GLActivity extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        _glSurface.onResume();
+
+        if (mAccelerometer != null)
+            mSensorManager.registerListener(mPlayer, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+
+        mGlSurface.onResume();
     }
 }

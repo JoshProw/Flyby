@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.Random;
 import java.util.Vector;
 
 /**
@@ -21,34 +22,32 @@ public class GLGameObject implements Serializable {
     float alpha = 1;
     float size = 2;
 
+    //Object speed
     float posXSpeed;
     float posYSpeed;
     float posZSpeed;
 
+    //Current object position
     float posX;
     float posY;
     float posZ;
-
+    private location mPos;
     // Vertices to make a triangle
-    private float vertices[];
-
-    // Colours for vertices
-    private float verticesColours[];
-
+    private float mVertices[];
+    // Colours for mVertices
+    private float mVerticesColours[];
     // chunks of cube, drawing them with triangles
     private short[] pointIndex;
-
-
-    private transient FloatBuffer vertBuffer;
-    private transient ShortBuffer pointBuffer;
-    private transient FloatBuffer colourBuffer;
-
+    //buffers
+    private transient FloatBuffer mVertBuffer;
+    private transient ShortBuffer mPointBuffer;
+    private transient FloatBuffer mColourBuffer;
     private int mtlID;
     private int resourceID;
-
     public GLGameObject(int resID, int mtlID, float intialX, float initialY, float initialZ, float aposXSpeed, float aposYSpeed, float aposZSpeed) {
-
+        //Mtl resource id
         this.mtlID = mtlID;
+        //Resource id
         this.resourceID = resID;
 
         // Set velocity
@@ -63,58 +62,54 @@ public class GLGameObject implements Serializable {
 
     public void generateColours(float r,float g, float b, float a)
     {
-        verticesColours = new float[(vertices.length/3)*4];
-        for(int i = 0;i<verticesColours.length;i+=4)
+        mVerticesColours = new float[(mVertices.length / 3) * 4];
+        for (int i = 0; i < mVerticesColours.length; i += 4)
         {
             int j = i;
-            verticesColours[j] = r;
-            j++;
-            verticesColours[j] = g;
-            j++;
-            verticesColours[j] = b;
-            j++;
-            verticesColours[j] = a;
+            mVerticesColours[j++] = r;
+            mVerticesColours[j++] = g;
+            mVerticesColours[j++] = b;
+            mVerticesColours[j] = a;
         }
-
-        for(int i = 0;i<verticesColours.length;i++)
+        for (int i = 0; i < mVerticesColours.length; i++)
         {
-            Log.d("COLOURS",""+verticesColours[i]);
+            Log.d("COLOURS", "" + mVerticesColours[i]);
         }
-        Log.d("VERTICES COUNT",""+vertices.length);
-        Log.d("COLOUR COUNT",""+verticesColours.length);
+        Log.d("VERTICES COUNT", "" + mVertices.length);
+        Log.d("COLOUR COUNT", "" + mVerticesColours.length);
     }
 
     public void setColours(float[] colours)
     {
-        verticesColours = colours;
+        mVerticesColours = colours;
     }
 
     public void loadBuffers()
     {
-        // Store vertices (4 bytes per float)
-        ByteBuffer bBuff = ByteBuffer.allocateDirect(vertices.length*4);
+        // Store mVertices (4 bytes per float)
+        ByteBuffer bBuff = ByteBuffer.allocateDirect(mVertices.length * 4);
         bBuff.order(ByteOrder.nativeOrder()); // prevents garbage collector from throwing data away
 
-        vertBuffer = bBuff.asFloatBuffer(); // use as float buffer
-        vertBuffer.put(vertices); // store vertices in buffer
-        vertBuffer.position(0); // starting position in buffer
+        mVertBuffer = bBuff.asFloatBuffer(); // use as float buffer
+        mVertBuffer.put(mVertices); // store vertices in buffer
+        mVertBuffer.position(0); // starting position in buffer
 
         // Store points (2 bytes per short)
         ByteBuffer pointBuff = ByteBuffer.allocateDirect(pointIndex.length*2);
         pointBuff.order(ByteOrder.nativeOrder());
 
-        pointBuffer = pointBuff.asShortBuffer();
-        pointBuffer.put(pointIndex);
-        pointBuffer.position(0);
+        mPointBuffer = pointBuff.asShortBuffer();
+        mPointBuffer.put(pointIndex);
+        mPointBuffer.position(0);
 
-        if(verticesColours != null) {
+        if (mVerticesColours != null) {
             // Store points (2 bytes per short)
-            ByteBuffer colBuff = ByteBuffer.allocateDirect(verticesColours.length * 4);
+            ByteBuffer colBuff = ByteBuffer.allocateDirect(mVerticesColours.length * 4);
             colBuff.order(ByteOrder.nativeOrder());
 
-            colourBuffer = colBuff.asFloatBuffer();
-            colourBuffer.put(verticesColours);
-            colourBuffer.position(0);
+            mColourBuffer = colBuff.asFloatBuffer();
+            mColourBuffer.put(mVerticesColours);
+            mColourBuffer.position(0);
         }
     }
 
@@ -131,33 +126,54 @@ public class GLGameObject implements Serializable {
 
     public float[] getVertices()
     {
-        return vertices;
+        return mVertices;
     }
 
     public void setVertices(Vector<Float> newVectices) {
-        vertices = new float[newVectices.size()];
+        mVertices = new float[newVectices.size()];
 
-        //newVectices.toArray(vertices);
+        //newVectices.toArray(mVertices);
 
         for (int i = 0; i < newVectices.size(); i++) {
-            vertices[i] = newVectices.elementAt(i);
-            //Log.d("VERT INDEX: "+i,""+vertices[i]);
+            mVertices[i] = newVectices.elementAt(i);
+            //Log.d("VERT INDEX: "+i,""+mVertices[i]);
         }
     }
 
-    private void setXspeed(float x)
-    {
-        posXSpeed = x;
+    public location randomizeLocation() {
+        Random randomizer = new Random();
+        int randInt = randomizer.nextInt(4);
+        mPos = location.values()[randInt];
+        //Log.d("ENUM",mPos.toString());
+        return mPos;
     }
 
-    private void setYspeed(float y)
+    public void loopZ()
     {
-        posXSpeed = y;
+        if (posZ <= 0) {
+            posZ = 80;
+            setObstacleLocation();
+        }
     }
 
-    private void setZspeed(float z)
+    public void setObstacleLocation()
     {
-        posXSpeed = z;
+        switch (randomizeLocation()) {
+            case left:
+                posX = 10;
+                posY = 0;
+                break;
+            case right:
+                posX = -10;
+                posY = 0;
+                break;
+            case top:
+                posX = 0;
+                posY = -10;
+            case bottom:
+                posX = 0;
+                posY = 10;
+        }
     }
 
     public void draw(GL10 gl){
@@ -169,9 +185,9 @@ public class GLGameObject implements Serializable {
         gl.glPushMatrix();
         gl.glTranslatef(posX,posY,posZ);
 
-        //Matrix.setIdentityf(vertices, 0);
-        //Matrix.translateM(vertices,0,posX,posY,0);
-        Matrix.scaleM(vertices, 0, 0.25f, 0.25f, 0.25f); // apply scale
+        //Matrix.setIdentityf(mVertices, 0);
+        //Matrix.translateM(mVertices,0,posX,posY,0);
+        Matrix.scaleM(mVertices, 0, 0.25f, 0.25f, 0.25f); // apply scale
 
         gl.glFrontFace(GL10.GL_CCW); // connect points in clockwise order
 
@@ -182,32 +198,51 @@ public class GLGameObject implements Serializable {
         // enable state to read from vertex array
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 
-        if(verticesColours!=null)
+        if (mVerticesColours != null)
             gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
         // first: number of points (2 for 2d)
         // second: type of values in vertex array
         // third: if wanting to skip over values each step
         // fourth: buffer to get values from
-        gl.glVertexPointer(3,GL10.GL_FLOAT,0,vertBuffer);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertBuffer);
 
-        if(verticesColours!=null)
-            gl.glColorPointer(4,GL10.GL_FLOAT,0,colourBuffer);
+        if (mVerticesColours != null)
+            gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColourBuffer);
         // first: way to connect points
         // second: how many points do we have?
         // third: type of values we're working with
         // fourth: buffer to get points from
         //gl.glDrawArrays(GL10.GL_TRIANGLES,0,pointIndex.length);
-        gl.glDrawElements(GL10.GL_TRIANGLES,pointIndex.length,GL10.GL_UNSIGNED_SHORT,pointBuffer);
+        gl.glDrawElements(GL10.GL_TRIANGLES, pointIndex.length, GL10.GL_UNSIGNED_SHORT, mPointBuffer);
 
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
-        if(verticesColours!=null)
+        if (mVerticesColours != null)
             gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 
         gl.glDisable(GL10.GL_CULL_FACE);
 
         gl.glPopMatrix();
+    }
+
+    public String getLocation() {
+        if (mPos != null) {
+            return mPos.toString();
+        }
+        return "";
+    }
+
+    private void setXspeed(float x) {
+        posXSpeed = x;
+    }
+
+    private void setYspeed(float y) {
+        posXSpeed = y;
+    }
+
+    private void setZspeed(float z) {
+        posXSpeed = z;
     }
 
     public float getAlpha() {
@@ -289,4 +324,6 @@ public class GLGameObject implements Serializable {
     public void setResourceID(int resourceID) {
         this.resourceID = resourceID;
     }
+
+    private enum location {left, right, top, bottom}
 }
